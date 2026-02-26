@@ -1,0 +1,5 @@
+{
+  "name": "Kodbank",
+  "description": "A secure banking application with JWT authentication and balance tracking.",
+  "requestFramePermissions": []
+}
