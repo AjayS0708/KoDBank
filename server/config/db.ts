@@ -48,6 +48,9 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_users_uid ON users(uid);
   CREATE INDEX IF NOT EXISTS idx_transactions_sender ON transactions(sender_id);
   CREATE INDEX IF NOT EXISTS idx_transactions_receiver ON transactions(receiver_id);
+  CREATE INDEX IF NOT EXISTS idx_transactions_created ON transactions(created_at);
+  CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token);
+  CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
 `);
 
 export default db;

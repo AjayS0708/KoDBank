@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { ApiError } from "../utils/ApiError.ts";
-
-const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || "access-secret-123";
+import { CONFIG } from "../config/constants.ts";
 
 export const authMiddleware = (req: any, res: Response, next: NextFunction) => {
   const token = req.cookies.accessToken || req.headers.authorization?.split(" ")[1];
@@ -12,7 +11,7 @@ export const authMiddleware = (req: any, res: Response, next: NextFunction) => {
   }
 
   try {
-    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    const decoded = jwt.verify(token, CONFIG.JWT.ACCESS_SECRET);
     req.user = decoded;
     next();
   } catch (err) {

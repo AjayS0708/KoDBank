@@ -21,21 +21,25 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       try {
         const [balanceRes, historyRes] = await Promise.all([
           api.get("/banking/balance"),
           api.get("/banking/history?limit=5")
         ]);
-        setBalance(balanceRes.data.data.balance);
-        setHistory(historyRes.data.data.transactions);
+        if (isMounted) {
+          setBalance(balanceRes.data.data.balance);
+          setHistory(historyRes.data.data.transactions);
+        }
       } catch (err) {
         console.error("Failed to fetch dashboard data", err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchData();
+    return () => { isMounted = false; };
   }, []);
 
   return (

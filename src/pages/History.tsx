@@ -20,22 +20,30 @@ const History: React.FC = () => {
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
   const [loading, setLoading] = useState(true);
 
-  const fetchHistory = async (page = 1) => {
-    setLoading(true);
-    try {
-      const res = await api.get(`/banking/history?page=${page}&limit=10`);
-      setHistory(res.data.data.transactions);
-      setPagination(res.data.data.pagination);
-    } catch (err) {
-      console.error("Failed to fetch history", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchHistory();
-  }, []);
+    let isMounted = true;
+    const fetchHistory = async (page = 1) => {
+      setLoading(true);
+      try {
+        const res = await api.get(`/banking/history?page=${page}&limit=10`);
+        if (isMounted) {
+          setHistory(res.data.data.transactions);
+          setPagination(res.data.data.pagination);
+        }
+      } catch (err) {
+        console.error("Failed to fetch history", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchHistory(pagination.page);
+    return () => { isMounted = false; };
+  }, [pagination.page]);
+
+  const handlePageChange = (newPage: number) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+  };
 
   return (
     <div className="space-y-8">
@@ -127,7 +135,7 @@ const History: React.FC = () => {
               variant="secondary" 
               size="sm" 
               disabled={pagination.page === 1}
-              onClick={() => fetchHistory(pagination.page - 1)}
+              onClick={() => handlePageChange(pagination.page - 1)}
             >
               <ChevronLeft className="w-4 h-4" />
               Prev
@@ -136,7 +144,7 @@ const History: React.FC = () => {
               variant="secondary" 
               size="sm"
               disabled={pagination.page === pagination.totalPages}
-              onClick={() => fetchHistory(pagination.page + 1)}
+              onClick={() => handlePageChange(pagination.page + 1)}
             >
               Next
               <ChevronRight className="w-4 h-4" />

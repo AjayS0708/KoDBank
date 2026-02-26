@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AuthService } from "../services/AuthService.ts";
 import logger from "../utils/logger.ts";
+import { CONFIG } from "../config/constants.ts";
 
 export class AuthController {
   static async register(req: Request, res: Response, next: NextFunction) {
@@ -19,18 +20,11 @@ export class AuthController {
       
       // Set cookies
       res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
+        ...CONFIG.COOKIE,
         maxAge: 15 * 60 * 1000, // 15 mins
       });
 
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
+      res.cookie("refreshToken", refreshToken, CONFIG.COOKIE);
 
       logger.info(`User logged in: ${user.username}`);
       res.json({ status: "success", message: "Login successful", data: { user, accessToken, refreshToken } });
@@ -42,16 +36,16 @@ export class AuthController {
   static async refresh(req: Request, res: Response, next: NextFunction) {
     try {
       const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
-      const { accessToken } = await AuthService.refresh(refreshToken);
+      const { accessToken, refreshToken: newRefreshToken } = await AuthService.refresh(refreshToken);
       
       res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
+        ...CONFIG.COOKIE,
         maxAge: 15 * 60 * 1000,
       });
 
-      res.json({ status: "success", data: { accessToken } });
+      res.cookie("refreshToken", newRefreshToken, CONFIG.COOKIE);
+
+      res.json({ status: "success", data: { accessToken, refreshToken: newRefreshToken } });
     } catch (err) {
       next(err);
     }
