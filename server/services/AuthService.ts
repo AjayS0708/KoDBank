@@ -1,36 +1,30 @@
-import jwt from "jsonwebtoken";
+import jwt, { SignOptions } from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import { UserRepository } from "../repositories/UserRepository.ts";
 import { TokenRepository } from "../repositories/TokenRepository.ts";
 import { ApiError } from "../utils/ApiError.ts";
 import { CONFIG } from "../config/constants.ts";
+import logger from "../utils/logger.ts";
 
 export class AuthService {
   static async register(userData: any) {
-    console.log("AuthService.register called with:", { ...userData, password: "[REDACTED]" });
+    logger.info(`Attempting to register user: ${userData.username}`);
     
     try {
       const existingUser = UserRepository.findByUsername(userData.username);
       if (existingUser) {
-        console.log("Username conflict:", userData.username);
         throw new ApiError(400, "Username already exists");
       }
 
       const existingEmail = UserRepository.findByEmail(userData.email);
       if (existingEmail) {
-        console.log("Email conflict:", userData.email);
         throw new ApiError(400, "Email already registered");
       }
 
-      console.log("Hashing password with rounds:", CONFIG.SECURITY.BCRYPT_ROUNDS);
       const passwordHash = await bcrypt.hash(userData.password, CONFIG.SECURITY.BCRYPT_ROUNDS);
-      console.log("Password hash generated");
-      
       const uid = uuidv4();
-      console.log("Generated UID:", uid);
 
-      console.log("Inserting user into database...");
       UserRepository.create({
         username: userData.username,
         email: userData.email,
@@ -39,14 +33,20 @@ export class AuthService {
         role: userData.role || 'customer',
         uid: uid
       });
-      console.log("User insertion successful");
 
+      logger.info(`User created successfully: ${userData.username} (UID: ${uid})`);
       return { uid, username: userData.username };
     } catch (err: any) {
-      console.error("CRITICAL REGISTRATION FAILURE:", err);
-      
-      if (err instanceof ApiError) throw err;
-      
+      if (err instanceof ApiError) {
+        throw err;
+      }
+
+      logger.error("Registration Error:", {
+        message: err.message,
+        stack: err.stack,
+        userData: { ...userData, password: "[REDACTED]" }
+      });
+
       if (err.message?.includes("UNIQUE constraint failed")) {
         if (err.message.includes("users.username")) throw new ApiError(400, "Username already exists");
         if (err.message.includes("users.email")) throw new ApiError(400, "Email already registered");
@@ -75,7 +75,7 @@ export class AuthService {
     return jwt.sign(
       { id: user.id, username: user.username, role: user.role, uid: user.uid },
       CONFIG.JWT.ACCESS_SECRET,
-      { expiresIn: CONFIG.JWT.ACCESS_EXPIRY }
+      { expiresIn: CONFIG.JWT.ACCESS_EXPIRY as any }
     );
   }
 
@@ -83,7 +83,7 @@ export class AuthService {
     return jwt.sign(
       { id: user.id },
       CONFIG.JWT.REFRESH_SECRET,
-      { expiresIn: CONFIG.JWT.REFRESH_EXPIRY }
+      { expiresIn: CONFIG.JWT.REFRESH_EXPIRY as any }
     );
   }
 

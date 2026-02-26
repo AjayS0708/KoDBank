@@ -20,7 +20,7 @@ export const registerValidation = [
   body("username").isString().isLength({ min: 3, max: 30 }).withMessage("Username must be between 3 and 30 characters"),
   body("email").isEmail().withMessage("Invalid email address"),
   body("password").isLength({ min: 8 }).withMessage("Password must be at least 8 characters long"),
-  body("phone").optional({ checkFalsy: true }).isMobilePhone("any").withMessage("Invalid phone number"),
+  body("phone").optional({ checkFalsy: true }).isString().withMessage("Phone number must be a string"),
 ];
 
 export const loginValidation = [

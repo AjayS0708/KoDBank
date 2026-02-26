@@ -77,7 +77,6 @@ const Register: React.FC = () => {
               icon={<Phone className="w-5 h-5" />}
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              required
             />
 
             <Input
@@ -97,13 +96,25 @@ const Register: React.FC = () => {
             </div>
           </form>
 
-          <div className="mt-8 text-center">
+          <div className="mt-8 text-center space-y-4">
             <p className="text-sm text-white/40">
               Already have an account?{" "}
               <Link to="/login" className="text-emerald-400 font-bold hover:underline">
                 Sign in instead
               </Link>
             </p>
+            <div className="pt-4 border-t border-white/5">
+              <button 
+                onClick={() => {
+                  localStorage.setItem("demo_mode", "true");
+                  localStorage.setItem("user", JSON.stringify({ username: "demo_user", role: "customer", balance: 125450.00 }));
+                  window.location.href = "/";
+                }}
+                className="text-[10px] uppercase tracking-[0.2em] font-black text-white/20 hover:text-emerald-400 transition-colors"
+              >
+                — Try Demo Mode —
+              </button>
+            </div>
           </div>
         </Card>
       </motion.div>

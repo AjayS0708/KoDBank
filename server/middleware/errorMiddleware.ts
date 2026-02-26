@@ -8,15 +8,12 @@ export const errorMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  let { statusCode, message } = err;
+  let statusCode = err.statusCode || 500;
+  let message = err.message || "Internal Server Error";
 
-  if (!(err instanceof ApiError)) {
-    statusCode = 500;
-    message = "Internal Server Error";
-  }
-
+  // Log the error
   if (statusCode >= 500) {
-    logger.error(`${req.method} ${req.path} - ${statusCode} - ${message}`);
+    logger.error(`${req.method} ${req.path} - ${statusCode} - ${message}`, { stack: err.stack });
   } else {
     logger.warn(`${req.method} ${req.path} - ${statusCode} - ${message}`);
   }
@@ -25,6 +22,6 @@ export const errorMiddleware = (
     status: "error",
     statusCode,
     message,
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+    ...(process.env.NODE_ENV !== "production" && { stack: err.stack }),
   });
 };

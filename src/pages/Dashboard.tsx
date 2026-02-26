@@ -23,6 +23,16 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     let isMounted = true;
     const fetchData = async () => {
+      if (localStorage.getItem("demo_mode") === "true") {
+        setBalance(125450.00);
+        setHistory([
+          { id: 1, type: 'DEPOSIT', amount: 5000, description: 'Initial Deposit', status: 'COMPLETED', created_at: new Date().toISOString() },
+          { id: 2, type: 'TRANSFER', amount: 1200, receiver_name: 'Apple Store', status: 'COMPLETED', created_at: new Date().toISOString() },
+          { id: 3, type: 'TRANSFER', amount: 450, receiver_name: 'Starbucks', status: 'COMPLETED', created_at: new Date().toISOString() }
+        ]);
+        setLoading(false);
+        return;
+      }
       try {
         const [balanceRes, historyRes] = await Promise.all([
           api.get("/banking/balance"),
