@@ -23,16 +23,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const checkAuth = async () => {
+    // Check for demo mode first
+    if (localStorage.getItem("demo_mode") === "true") {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       const res = await api.get("/banking/balance");
       // If we get here, we're authenticated. 
-      // In a real app, we'd have a /me endpoint.
-      // For now, we'll restore user from localStorage if available
       const storedUser = localStorage.getItem("user");
       if (storedUser) setUser(JSON.parse(storedUser));
     } catch (err) {
       setUser(null);
       localStorage.removeItem("user");
+      localStorage.removeItem("demo_mode");
     } finally {
       setLoading(false);
     }
@@ -53,6 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setUser(null);
       localStorage.removeItem("user");
+      localStorage.removeItem("demo_mode");
     }
   };
 

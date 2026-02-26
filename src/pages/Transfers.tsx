@@ -20,6 +20,16 @@ const Transfers: React.FC = () => {
     if (!formData.receiverUsername || !formData.amount) return;
 
     setLoading(true);
+
+    if (localStorage.getItem("demo_mode") === "true") {
+      setTimeout(() => {
+        toast.success("Demo Transfer completed successfully!");
+        setFormData({ receiverUsername: "", amount: "", description: "" });
+        setLoading(false);
+      }, 1000);
+      return;
+    }
+
     try {
       await api.post("/banking/transfer", {
         ...formData,

@@ -23,6 +23,18 @@ const History: React.FC = () => {
   useEffect(() => {
     let isMounted = true;
     const fetchHistory = async (page = 1) => {
+      if (localStorage.getItem("demo_mode") === "true") {
+        setHistory([
+          { id: 1, type: 'DEPOSIT', amount: 5000, description: 'Initial Deposit', status: 'COMPLETED', created_at: new Date().toISOString() },
+          { id: 2, type: 'TRANSFER', amount: 1200, receiver_name: 'Apple Store', status: 'COMPLETED', created_at: new Date().toISOString() },
+          { id: 3, type: 'TRANSFER', amount: 450, receiver_name: 'Starbucks', status: 'COMPLETED', created_at: new Date().toISOString() },
+          { id: 4, type: 'DEPOSIT', amount: 2500, description: 'Salary Credit', status: 'COMPLETED', created_at: new Date().toISOString() },
+          { id: 5, type: 'TRANSFER', amount: 80, receiver_name: 'Netflix', status: 'COMPLETED', created_at: new Date().toISOString() }
+        ]);
+        setPagination({ page: 1, totalPages: 1 });
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       try {
         const res = await api.get(`/banking/history?page=${page}&limit=10`);
