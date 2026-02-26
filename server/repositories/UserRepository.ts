@@ -5,6 +5,10 @@ export class UserRepository {
     return db.prepare("SELECT * FROM users WHERE username = ? AND deleted_at IS NULL").get(username);
   }
 
+  static findByEmail(email: string) {
+    return db.prepare("SELECT * FROM users WHERE email = ? AND deleted_at IS NULL").get(email);
+  }
+
   static findById(id: number) {
     return db.prepare("SELECT * FROM users WHERE id = ? AND deleted_at IS NULL").get(id);
   }
@@ -16,9 +20,18 @@ export class UserRepository {
   static create(user: any) {
     const stmt = db.prepare(`
       INSERT INTO users (uid, username, email, password_hash, phone, role, balance)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      VALUES (@uid, @username, @email, @password_hash, @phone, @role, @balance)
     `);
-    return stmt.run(user.uid, user.username, user.email, user.password_hash, user.phone, user.role, user.balance || 100000.0);
+    
+    return stmt.run({
+      uid: user.uid,
+      username: user.username,
+      email: user.email,
+      password_hash: user.password_hash,
+      phone: user.phone || null,
+      role: user.role || 'customer',
+      balance: user.balance || 100000.0
+    });
   }
 
   static updateBalance(id: number, amount: number) {

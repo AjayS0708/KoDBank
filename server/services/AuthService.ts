@@ -8,20 +8,52 @@ import { CONFIG } from "../config/constants.ts";
 
 export class AuthService {
   static async register(userData: any) {
-    const existingUser = UserRepository.findByUsername(userData.username);
-    if (existingUser) throw new ApiError(400, "Username already exists");
+    console.log("AuthService.register called with:", { ...userData, password: "[REDACTED]" });
+    
+    try {
+      const existingUser = UserRepository.findByUsername(userData.username);
+      if (existingUser) {
+        console.log("Username conflict:", userData.username);
+        throw new ApiError(400, "Username already exists");
+      }
 
-    const passwordHash = await bcrypt.hash(userData.password, CONFIG.SECURITY.BCRYPT_ROUNDS);
-    const uid = uuidv4();
+      const existingEmail = UserRepository.findByEmail(userData.email);
+      if (existingEmail) {
+        console.log("Email conflict:", userData.email);
+        throw new ApiError(400, "Email already registered");
+      }
 
-    UserRepository.create({
-      ...userData,
-      uid,
-      password_hash: passwordHash,
-      role: userData.role || 'customer'
-    });
+      console.log("Hashing password with rounds:", CONFIG.SECURITY.BCRYPT_ROUNDS);
+      const passwordHash = await bcrypt.hash(userData.password, CONFIG.SECURITY.BCRYPT_ROUNDS);
+      console.log("Password hash generated");
+      
+      const uid = uuidv4();
+      console.log("Generated UID:", uid);
 
-    return { uid, username: userData.username };
+      console.log("Inserting user into database...");
+      UserRepository.create({
+        username: userData.username,
+        email: userData.email,
+        password_hash: passwordHash,
+        phone: userData.phone || null,
+        role: userData.role || 'customer',
+        uid: uid
+      });
+      console.log("User insertion successful");
+
+      return { uid, username: userData.username };
+    } catch (err: any) {
+      console.error("CRITICAL REGISTRATION FAILURE:", err);
+      
+      if (err instanceof ApiError) throw err;
+      
+      if (err.message?.includes("UNIQUE constraint failed")) {
+        if (err.message.includes("users.username")) throw new ApiError(400, "Username already exists");
+        if (err.message.includes("users.email")) throw new ApiError(400, "Email already registered");
+      }
+      
+      throw new ApiError(500, `Registration failed: ${err.message || 'Unknown error'}`);
+    }
   }
 
   static async login(username: string, password: string) {
